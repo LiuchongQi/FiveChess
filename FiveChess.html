@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="Keywords" content="关键字">
+	<meta name="Description" content="描述信息">
+	<title>五子棋</title>
+	<style>
+		*{margin:0;}
+		#canvas{background:#F0F0F0;
+			margin:100px auto;display:block;border-radius:10px;
+			box-shadow:0px 0px 10px black;}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" height="450" width="450"></canvas>
+	<script type="text/javascript">
+		var over=false;
+		var chess=document.getElementById("canvas");
+		var context=chess.getContext("2d");
+		
+		var drawChessBoard=function(){
+			var gradient=context.createLinearGradient(0,0,chess.width,0);
+			gradient.addColorStop("0","orange");
+			gradient.addColorStop("0.5","blue");
+			gradient.addColorStop("1.0","red");
+			context.strokeStyle=gradient;
+			for(var i=0;i<15;i++){
+				context.moveTo(15,15+30*i);
+				context.lineTo(435,15+30*i);
+				context.stroke();
+				context.moveTo(15+30*i,15);
+				context.lineTo(15+30*i,435);
+				context.stroke();
+			}
+		}
+		drawChessBoard();
+		
+		var onStep=function(i,j,me){
+			context.beginPath();
+			context.arc(15+30*i,15+30*j,13,0,Math.PI*2);
+			context.closePath();
+			context.stroke();
+			var gradient=context.createRadialGradient(15+30*i,15+30*j,0,15+30*i,15+30*j,13);
+			if(me){
+				gradient.addColorStop(0,"white");
+				gradient.addColorStop(1,"purple");
+			}
+			else{
+				gradient.addColorStop(0,"white");	
+				gradient.addColorStop(1,"green");
+			}
+			context.fillStyle=gradient;
+			context.fill();
+		}
+		
+		var chessBoard=[];
+		for(var i=0;i<15;i++){
+			chessBoard[i]=[];
+			for(var j=0;j<15;j++){
+				chessBoard[i][j]=0;
+			}
+		}
+		var me=true;
+		chess.onclick=function(e){
+			if(over)return;
+			if(!me)return;
+			var x=e.offsetX;
+			var y=e.offsetY;
+			var i=Math.floor(x/30);
+			var j=Math.floor(y/30);
+			if(chessBoard[i][j]==0){
+					onStep(i,j,me);
+					chessBoard[i][j]=1;
+					for(k=0;k<counts;k++){
+						if(wins[i][j][k]){
+							myWin[k]++;
+							computerWin[k]=6;
+							if(myWin[k]==5){
+								alert("You Win!!!");
+								over=true;
+							}
+						}
+					}
+					if(!over){
+						me=!me;
+						computerAI();
+					}
+			}
+		}
+		
+		var wins=[];
+		for(var i=0;i<15;i++){
+			wins[i]=[];
+			for(var j=0;j<15;j++){
+				wins[i][j]=[];
+			}
+		}
+		var counts=0;
+		
+		for(var i=0;i<15;i++){
+			for(var j=0;j<11;j++){
+				for(k=0;k<5;k++){
+					wins[i][j+k][counts]=true;
+				}
+				counts++;
+			}
+		}
+		for(var i=0;i<15;i++){
+			for(var j=0;j<11;j++){
+				for(k=0;k<5;k++){
+					wins[j+k][i][counts]=true;
+				}
+				counts++;
+			}
+		}
+		for(var i=0;i<11;i++){
+			for(var j=0;j<11;j++){
+				for(k=0;k<5;k++){
+					wins[i+k][j+k][counts]=true;
+				}
+				counts++;
+			}
+		}
+		for(var i=0;i<11;i++){
+			for(var j=14;j>3;j--){
+				for(k=0;k<5;k++){
+					wins[i+k][j-k][counts]=true;
+				}
+				counts++;
+			}
+		}
+		//赢法统计数组
+		var myWin=[];
+		var computerWin=[];
+		for(var i=0;i<counts;i++){
+			myWin[i]=0;
+			computerWin[i]=0;
+		}
+		var computerAI=function(){
+			var mySource=[];
+			var computerSource=[];
+			var u=0,v=0,max=0;
+			for(var i=0;i<15;i++){
+				mySource[i]=[];
+				computerSource[i]=[];
+				for(var j=0;j<15;j++){
+					mySource[i][j]=0;
+					computerSource[i][j]=0;
+				}
+			}
+			for(var i=0;i<15;i++){
+				for(var j=0;j<15;j++){
+					if(chessBoard[i][j]==0){
+						for(var k=0;k<counts;k++){
+							if(wins[i][j][k]){
+								if(myWin[k]==1){
+									mySource[i][j]+=200;
+								}
+								else if(myWin[k]==2){
+									mySource[i][j]+=400;
+								}
+								else if(myWin[k]==3){
+									mySource[i][j]+=800;
+								}
+								else if(myWin[k]==4){
+									mySource[i][j]+=2000;
+								}
+								if(computerWin[k]==1){
+									computerSource[i][j]+=420;
+								}
+								else if(computerWin[k]==2){
+									computerSource[i][j]+=820;
+								}
+								else if(computerWin[k]==3){
+									computerSource[i][j]+=4100;
+								}
+								else if(computerWin[k]==4){
+									computerSource[i][j]+=20000;
+								}
+							}
+						}
+						if(mySource[i][j]>max){
+							max=mySource[i][j];
+							u=i;v=j;
+						}
+						else if(mySource[i][j]==max){
+							if(computerSource[i][j]>computerSource[u][v]){
+								u=i;v=j;
+							}
+						}
+						if(computerSource[i][j]>max){
+							max=computerSource[i][j];
+							u=i;v=j;
+						}
+						else if(computerSource[i][j]==max){
+							if(mySource[i][j]>mySource[u][v]){
+								u=i;v=j;
+							}
+						}
+					}
+				}
+			}
+			onStep(u,v,false);
+			chessBoard[u][v]=2;
+			for(k=0;k<counts;k++){
+				if(wins[u][v][k]){
+					computerWin[k]++;
+					myWin[k]=6;
+					if(computerWin[k]==5){
+						alert("Computer Win!!!");
+						over=true;
+					}
+				}
+			}
+			if(!over){
+				me=!me;
+			}
+		}
+	</script>
+</body>
+</html>
